@@ -255,6 +255,7 @@ function install_diskimagebuilder() {
         ln -s $REDSTACK_SCRIPTS/files/elements/reddwarf-guest $PATH_DISKIMAGEBUILDER/elements/reddwarf-guest
         ln -s $REDSTACK_SCRIPTS/files/elements/reddwarf-mysql $PATH_DISKIMAGEBUILDER/elements/reddwarf-mysql
         ln -s $REDSTACK_SCRIPTS/files/elements/reddwarf-percona $PATH_DISKIMAGEBUILDER/elements/reddwarf-percona
+        ln -s $REDSTACK_SCRIPTS/files/elements/reddwarf-redis $PATH_DISKIMAGEBUILDER/elements/reddwarf-redis
     fi
 }
 
@@ -438,6 +439,18 @@ function add_dbass_mycnf_to_package_repo() {
     sudo -E reprepro --ignore=wrongdistribution -Vb $PACKAGES_DIR include squeeze *.changes
 }
 
+function add_dbass_rediscnf_to_package_repo() {
+    exclaim "Building and uploading dbaasrediscnf package..."
+    mkdir -p $PACKAGES_DIR
+    mkdir -p $BUILD_DIR
+    cp -R $PATH_REDDWARF/contrib/dbaas-rediscnf $BUILD_DIR
+    cd $BUILD_DIR/dbaas-rediscnf
+    sudo -E ./builddeb.sh
+    sudo -E reprepro -Vb $PACKAGES_DIR remove squeeze dbaas-rediscnf
+    sudo -E reprepro --ignore=wrongdistribution -Vb $PACKAGES_DIR include squeeze *.changes
+}
+
+
 function cmd_build() {
     # Run setup.py for all projects.
     exclaim "Calling setup for all dependencies..."
@@ -448,6 +461,7 @@ function cmd_build() {
     create_package_repo
     munge_apache2
     add_dbass_mycnf_to_package_repo
+    add_dbass_rediscnf_to_package_repo
     # Set up the host IP in the apt-repo-list
     sed -i "s,%network_gateway%,$NETWORK_GATEWAY,g" $REDSTACK_SCRIPTS/files/apt_repo.list
 }
